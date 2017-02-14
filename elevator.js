@@ -4,6 +4,7 @@ export default class Elevator {
     this.currentFloor = 0;
     this.riders = [];
     this.requests = [];
+    this.numberOfRequests = this.requests.length;
     this.stops = 0;
     this.floors = 0;
   }
@@ -19,16 +20,30 @@ export default class Elevator {
     this.state = 'idle';
   }
 
+  moveToPickup(request){
+    let pickupFloor = request.currentFloor;
+    let floorsToPerson = Math.abs(this.currentFloor - pickupFloor)
+    this.currentFloor = request.currentFloor;
+    this.floors += floorsToPerson;
+    this.stops += 1;
+  }
+
+  moveToDropoff(request){
+    let pickupFloor = request.currentFloor;
+    let floorsToDropoff = Math.abs(pickupFloor - request.floor)
+    this.floors += floorsToDropoff;
+    this.stops += 1;
+    this.currentFloor = request.floor;
+  }
+
   runElevator(){
-    this.requests.forEach((request)=>{
-      let pickupFloor = request.currentFloor;
-      let floorsToPerson = Math.abs(this.currentFloor - pickupFloor)
-      let floorsToDropoff = Math.abs(pickupFloor - request.floor)
-      this.currentFloor = request.floor;
-      this.floors = this.floors + floorsToPerson + floorsToDropoff;
-      this.stops += 2
-      this.requests.shift()
-    })
+
+    this.moveToPickup(this.requests[0])
+    this.moveToDropoff(this.requests[0])
+    this.requests.shift()
+    if(this.requests.length > 0){
+      runElevator()
+    }
   }
 
 }
