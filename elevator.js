@@ -1,3 +1,5 @@
+const moment = require('moment')
+
 export default class Elevator {
   constructor() {
     this.state = 'idle'; //'broken' or 'moving'
@@ -17,7 +19,6 @@ export default class Elevator {
     this.requests.push(Object.assign(person, {floor}))
     //run requests
     this.runElevator()
-    this.state = 'idle';
   }
 
   moveToPickup(request){
@@ -34,15 +35,22 @@ export default class Elevator {
     this.floors += floorsToDropoff;
     this.stops += 1;
     this.currentFloor = request.floor;
+
+    this.requests.shift();
   }
 
   runElevator(){
-
+    this.state = 'moving';
     this.moveToPickup(this.requests[0])
     this.moveToDropoff(this.requests[0])
-    this.requests.shift()
     if(this.requests.length > 0){
       runElevator()
+    }
+
+    this.state = 'idle';
+
+    if(moment().hour() < 12){
+      this.currentFloor = 0;
     }
   }
 
