@@ -15,43 +15,47 @@ export default class Elevator {
     this.constructor()
   }
 
-  requestFloor(person, floor){
-    this.requests.push(Object.assign(person, {floor}))
+  requestFloor(person, desiredFloor){
+    this.requests.push(Object.assign(person, {desiredFloor}))
     //run requests
-    this.runElevator()
+    if(this.state === 'idle'){
+      this.runElevator()
+    }
   }
 
-  moveToPickup(request){
-    let pickupFloor = request.currentFloor;
-    let floorsToPerson = Math.abs(this.currentFloor - pickupFloor)
-    this.currentFloor = request.currentFloor;
-    this.floors += floorsToPerson;
-    this.stops += 1;
-  }
+  elevatorMove(floor){
+    let floorsMoved = Math.abs(this.currentFloor - floor)
 
-  moveToDropoff(request){
-    let pickupFloor = request.currentFloor;
-    let floorsToDropoff = Math.abs(pickupFloor - request.floor)
-    this.floors += floorsToDropoff;
-    this.stops += 1;
-    this.currentFloor = request.floor;
+    let promise = new Promise((resolve, reject)=>{
+      setTimeout(()=>{
+        this.currentFloor = floor;
+        this.floors += floorsMoved;
+        this.stops += 1;
+        resolve()
+      }, 50)
+    })
 
-    this.requests.shift();
+    return promise
   }
 
   runElevator(){
     this.state = 'moving';
-    this.moveToPickup(this.requests[0])
-    this.moveToDropoff(this.requests[0])
-    if(this.requests.length > 0){
-      runElevator()
-    }
-
-    this.state = 'idle';
-
-    if(moment().hour() < 12){
-      this.currentFloor = 0;
-    }
+    this.elevatorMove(this.requests[0].currentFloor).then(()=>{
+      this.elevatorMove(this.requests[0].desiredFloor).then(()=>{
+        this.requests.shift();
+        if (this.requests.length > 0){
+          this.runElevator()
+        } else {
+          if (moment().hour() < 12){
+            this.elevatorMove(0).then(()=>{
+              this.state = 'idle'
+            })
+          } else {
+            this.state = 'idle'
+          }
+        }
+      })
+    })
   }
 
 }
